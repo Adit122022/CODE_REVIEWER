@@ -11,7 +11,7 @@ const Project = () => {
 
   useEffect(() => {
     // Initialize Socket.io connection
-    const newSocket = io("http://localhost:3000", { transports: ["websocket"] });
+    const newSocket = io("http://localhost:3000", { query:{projectId}});
     // Save socket instance
     setsocket(newSocket);
    // Cleanup on unmount
@@ -60,7 +60,12 @@ const Project = () => {
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             />
             <button
-              onClick={sendMessage}
+
+              onClick={()=>{
+                sendMessage();
+                setmsg("");
+                socket.emit('sendMessage',msg)
+              }}
               className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition flex items-center justify-center"
             >
               <i className="ri-send-plane-fill text-xl"></i>

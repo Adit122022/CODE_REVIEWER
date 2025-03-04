@@ -7,14 +7,21 @@ const server = require("http").createServer(app);
 const io = require("socket.io")(server, { cors: { origin: "*" } });
 
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
-
+    const projectId = socket.handshake.query.projectId;
+     if (!projectId) {
+        console.log("No projectId received in handshake!");
+        return;
+    }
+    console.log(`User ${socket.id} connected to project: ${projectId}`);
+    // Join a room based on projectId
+    socket.join(projectId);
   // Listen for incoming messages
-  socket.on("send_message", (message) => {
+  socket.on("message", (message) => {
+
     console.log(`Received message: ${message}`);
 
     // Broadcast the message to all clients except the sender
-    socket.broadcast.emit("receive_message", message);
+    socket.broadcast.to(projectId).emit ('message' , message);
   });
 
   // Handle user disconnect
