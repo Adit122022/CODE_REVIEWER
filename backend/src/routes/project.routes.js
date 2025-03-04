@@ -1,11 +1,11 @@
 const {Router} = require('express');
-const { create } = require('../controller/project.controller');
+const { create, List } = require('../controller/project.controller');
 
 
 const routes = Router();
 
 
 routes.post('/create', create);
-// router.get('/list' ,)
+routes.get('/list' ,List)
 
 module.exports = routes
