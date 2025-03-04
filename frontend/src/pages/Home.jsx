@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Modals from "../others/Modals";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   const [projects, setProjects] = useState([]);
@@ -58,14 +59,14 @@ const Home = () => {
       {/* Project List */}
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
         {projects.length > 0 ? (
-          projects.map((project) => (
-            <div
-              key={project._id}
-              className="bg-white p-5 rounded-lg shadow-md border border-gray-300 
-                        transition duration-300 hover:shadow-xl hover:bg-gray-100"
-            >
-              <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
-            </div>
+          projects.map((project , idx) => (
+           <Link to='/project' key ={idx} > <div
+           key={project._id}
+           className="bg-white p-5 rounded-lg shadow-md border border-gray-300 
+                     transition duration-300 hover:shadow-xl hover:bg-gray-100"
+         >
+           <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
+         </div></Link>
           ))
         ) : (
           <p className="text-gray-500 text-center col-span-full text-lg">
