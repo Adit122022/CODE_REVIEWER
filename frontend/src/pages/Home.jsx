@@ -59,9 +59,9 @@ const Home = () => {
       {/* Project List */}
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
         {projects.length > 0 ? (
-          projects.map((project , idx) => (
-           <Link to='/project' key ={idx} > <div
-           key={project._id}
+          projects.map((project ) => (
+           <Link to={`/project/${project._id}`} key={project._id} > <div
+           
            className="bg-white p-5 rounded-lg shadow-md border border-gray-300 
                      transition duration-300 hover:shadow-xl hover:bg-gray-100"
          >

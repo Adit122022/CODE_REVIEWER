@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useParams } from "react-router-dom";
 import "remixicon/fonts/remixicon.css";
 
 const Project = () => {
+    const { projectId } = useParams();
     const [messages, setmessages] = useState([])
     const [msg, setmsg] = useState("")
  const appendMeassage =(msg)=>{
