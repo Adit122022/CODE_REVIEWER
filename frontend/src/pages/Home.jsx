@@ -36,46 +36,57 @@ const Home = () => {
   };
 
   return (
-    <section className="min-h-screen bg-gray-100 flex flex-col items-center py-10">
-      <div className="w-full max-w-4xl bg-white shadow-lg rounded-xl p-6">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center">
-          Project List
-        </h2>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.length > 0 ? (
-            projects.map((project) => (
-              <div
-                key={project._id}
-                className="bg-blue-50 p-4 rounded-lg shadow-md border border-blue-200 transition duration-300 hover:shadow-lg hover:bg-blue-100"
-              >
-                <h3 className="text-lg font-medium text-gray-900">{project.name}</h3>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500 text-center col-span-full">No projects found.</p>
-          )}
+    <section className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4">
+    <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-8 border border-gray-200">
+     <div className=" flex w-full justify-between items-center py-5"> 
+        {/* Header */}
+      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+        🚀 Your Projects
+      </h2>
+         {/* New Project Button */}
+     
+        <button
+          onClick={() => setModal(true)}
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-2 
+                    rounded-lg shadow-lg transition-all duration-300 hover:scale-105 
+                    hover:shadow-xl"
+        >
+          + New Project
+        </button>
         </div>
-
-        {/* Modal Component */}
-        {modal && (
-          <Modals
-            isOpen={modal}
-            onClose={() => setModal(false)}
-            onSubmit={handleCreateProject}
-          />
+  
+      {/* Project List */}
+      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+        {projects.length > 0 ? (
+          projects.map((project) => (
+            <div
+              key={project._id}
+              className="bg-white p-5 rounded-lg shadow-md border border-gray-300 
+                        transition duration-300 hover:shadow-xl hover:bg-gray-100"
+            >
+              <h3 className="text-lg font-semibold text-gray-900">{project.name}</h3>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500 text-center col-span-full text-lg">
+            No projects found. Start by adding a new one!
+          </p>
         )}
-
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={() => setModal(true)}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md transition-all duration-300 hover:bg-blue-700 active:scale-95"
-          >
-            New Project
-          </button>
-        </div>
       </div>
-    </section>
+  
+      {/* Modal Component */}
+      {modal && (
+        <Modals
+          isOpen={modal}
+          onClose={() => setModal(false)}
+          onSubmit={handleCreateProject}
+        />
+      )}
+  
+   
+    </div>
+  </section>
+  
   );
 };
 
