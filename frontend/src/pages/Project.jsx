@@ -54,7 +54,7 @@ const Project = () => {
                     : "bg-gray-200 self-start"
                 }`}
               >
-                <p>{message}</p>
+                <p>{message.content}</p>
               </div>
             ))}
           </div>
