@@ -14,7 +14,7 @@ const Home = () => {
   // Fetch projects from API
   const fetchProjects = () => {
     axios
-    .get("http://localhost:3000/v1/api/project/list")
+    .get("https://fs73pflc-3000.inc1.devtunnels.ms/v1/api/project/list")
     .then((response) => {
       setProjects(response.data);
     })
@@ -26,7 +26,7 @@ const Home = () => {
   // Function to handle form submission
   const handleCreateProject = (name) => {
     axios
-      .post("http://localhost:3000/v1/api/project/create", { name })
+      .post("https://fs73pflc-3000.inc1.devtunnels.ms/v1/api/project/create", { name })
       .then(() => {
         fetchProjects(); // Refresh project list after creation
         setModal(false); // Close modal

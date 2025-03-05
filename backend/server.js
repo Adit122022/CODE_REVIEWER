@@ -18,7 +18,7 @@ io.on("connection", (socket) => {
   // Listen for incoming messages
   socket.on("message", (message) => {
 
-    console.log(`Received message: ${message}`);
+    console.log(`Received message ....: ${message}`);
 
     // Broadcast the message to all clients except the sender
     socket.broadcast.to(projectId).emit ('message' , message);

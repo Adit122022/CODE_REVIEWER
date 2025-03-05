@@ -9,28 +9,35 @@ const Project = () => {
   const [messages, setmessages] = useState([]);
   const [msg, setmsg] = useState("");
 
+ 
+
+  const sendMessage = (msg) => {
+    // if (msg.trim() === "") return;
+
+    // // Send message to server
+    // socket.emit("message", msg);
+
+    // Append to local messages
+    setmessages([...messages, { content: msg }]);
+    setmsg("");
+  };
+
   useEffect(() => {
     // Initialize Socket.io connection
-    const newSocket = io("http://localhost:3000", { query:{projectId}});
+    const newSocket = io("https://fs73pflc-3000.inc1.devtunnels.ms/", { query:{projectId}});
+
+    newSocket.on('message', msg => {
+      console.log("Received message:", msg)
+      sendMessage(msg)
+  })
     // Save socket instance
     setsocket(newSocket);
    // Cleanup on unmount
   }, []);
 
-  const sendMessage = () => {
-    if (msg.trim() === "") return;
-
-    // Send message to server
-    socket.emit("send_message", msg);
-
-    // Append to local messages
-    setmessages([...messages, { sender: "user", content: msg }]);
-    setmsg("");
-  };
-
   return (
-    <main className="flex justify-center items-center min-h-screen bg-gray-100">
-      <section className="w-screen bg-white shadow-lg rounded-2xl p-6 h-screen flex gap-4">
+    <main className="flex justify-center items-center  bg-gray-100">
+      <section className="w-screen h-[80vh] bg-white shadow-lg rounded-2xl p-6 flex-col  md:flex-row flex gap-4">
         {/* Chat Section */}
         <div className="conversation bg-blue-100 p-4 rounded-lg shadow-sm flex-1 flex flex-col justify-between">
           {/* Messages */}
@@ -62,9 +69,9 @@ const Project = () => {
             <button
 
               onClick={()=>{
+                socket.emit('message',msg)
                 sendMessage();
                 setmsg("");
-                socket.emit('sendMessage',msg)
               }}
               className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition flex items-center justify-center"
             >
