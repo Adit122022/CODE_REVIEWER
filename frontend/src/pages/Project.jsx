@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import "remixicon/fonts/remixicon.css";
+import CodeEditor from "../others/CodeEditor";
 
 const Project = () => {
   const { projectId } = useParams();
   const [socket, setsocket] = useState(null);
   const [messages, setmessages] = useState([]);
   const [msg, setmsg] = useState("");
+  const [code, setCode] = useState("");
 
  
 
@@ -18,7 +20,8 @@ const Project = () => {
     // socket.emit("message", msg);
 
     // Append to local messages
-    setmessages([...messages, { content: msg }]);
+   
+    setmessages((prevMessages) => [...prevMessages, { content: msg }]); 
     setmsg("");
   };
 
@@ -51,7 +54,7 @@ const Project = () => {
                     : "bg-gray-200 self-start"
                 }`}
               >
-                <p>{message.content}</p>
+                <p>{message}</p>
               </div>
             ))}
           </div>
@@ -82,7 +85,7 @@ const Project = () => {
 
         {/* Code Section */}
         <div className="code bg-green-100 p-4 rounded-lg shadow-sm flex-[3] flex items-center justify-center">
-          <h2 className="text-lg font-semibold text-green-700">Code</h2>
+<CodeEditor  code={code} setCode={setCode}/>
         </div>
 
         {/* Review Section */}
