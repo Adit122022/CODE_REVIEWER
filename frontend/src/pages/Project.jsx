@@ -11,40 +11,29 @@ const Project = () => {
   const [msg, setmsg] = useState("");
   const [code, setCode] = useState("");
 
- 
-
   const sendMessage = (msg) => {
-    // if (msg.trim() === "") return;
-
-    // // Send message to server
-    // socket.emit("message", msg);
-
-    // Append to local messages
-   
     setmessages((prevMessages) => [...prevMessages, { content: msg }]); 
     setmsg("");
   };
 
   useEffect(() => {
-    // Initialize Socket.io connection
-    const newSocket = io("https://fs73pflc-3000.inc1.devtunnels.ms/", { query:{projectId}});
+    const newSocket = io("https://fs73pflc-3000.inc1.devtunnels.ms/", { query:{ projectId } });
 
     newSocket.on('message', msg => {
-      console.log("Received message:", msg)
-      sendMessage(msg)
-  })
-    // Save socket instance
+      console.log("Received message:", msg);
+      sendMessage(msg);
+    });
     setsocket(newSocket);
-   // Cleanup on unmount
   }, []);
 
   return (
-    <main className="flex justify-center items-center  bg-gray-100">
-      <section className="w-screen h-[80vh] bg-white shadow-lg rounded-2xl p-6 flex-col  md:flex-row flex gap-4">
+    <main className="flex justify-center items-center w-screen min-h-screen bg-gray-100 p-4">
+      <section className="w-full max-w-6xl bg-white shadow-xl rounded-xl p-6 flex flex-col md:flex-row gap-6">
+        
         {/* Chat Section */}
-        <div className="conversation bg-blue-100 p-4 rounded-lg shadow-sm flex-1 flex flex-col justify-between">
+        <div className="conversation flex-1 bg-blue-50 rounded-lg shadow-md flex flex-col justify-between">
           {/* Messages */}
-          <div className="flex flex-col gap-2 overflow-y-auto max-h-[80%] p-2">
+          <div className="flex flex-col gap-2 overflow-y-auto max-h-[60vh] p-3">
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -54,43 +43,42 @@ const Project = () => {
                     : "bg-gray-200 self-start"
                 }`}
               >
-                <p>{message.content}</p>
+                <p className="text-sm">{message.content}</p>
               </div>
             ))}
           </div>
 
           {/* Message Input */}
-          <div className="flex items-center border border-gray-300 rounded-lg p-2 w-full bg-white">
+          <div className="flex items-center gap-2 border-t border-gray-300 p-2">
             <input
               type="text"
               value={msg}
               onChange={(e) => setmsg(e.target.value)}
-              className="flex-1 px-3 py-2 outline-none border-none bg-transparent"
+              className="flex-1 px-4 py-2 border rounded-md bg-white outline-none focus:border-blue-400"
               placeholder="Type a message..."
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+              onKeyDown={(e) => e.key === "Enter" && sendMessage(msg)}
             />
             <button
-
-              onClick={()=>{
-                socket.emit('message',msg)
-                sendMessage();
+              onClick={() => {
+                socket.emit('message', msg);
+                sendMessage(msg);
                 setmsg("");
               }}
-              className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition flex items-center justify-center"
+              className="p-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
             >
-              <i className="ri-send-plane-fill text-xl"></i>
+              <i className="ri-send-plane-fill text-lg"></i>
             </button>
           </div>
         </div>
 
         {/* Code Section */}
-        <div className="code bg-green-100 p-4 rounded-lg shadow-sm flex-[3] flex items-center justify-center">
-<CodeEditor  code={code} setCode={setCode}/>
+        <div className="code flex-[2] bg-green-50 rounded-lg shadow-md flex items-center justify-center p-4">
+          <CodeEditor code={code} setCode={setCode} />
         </div>
 
         {/* Review Section */}
-        <div className="review bg-yellow-100 p-4 rounded-lg shadow-sm flex-1 flex items-center justify-center">
-          <h2 className="text-lg font-semibold text-yellow-700">Review</h2>
+        <div className="review flex-1 bg-yellow-50 rounded-lg shadow-md flex items-center justify-center p-4">
+          <h2 className="text-base font-semibold text-yellow-700">Review</h2>
         </div>
       </section>
     </main>
