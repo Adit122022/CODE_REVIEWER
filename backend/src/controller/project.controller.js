@@ -13,6 +13,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
  }
  module.exports.List= async(req,res) =>{
     const projects = await projectModel.find();
+    console.log(projects)
     return res.json(projects);
  }
 

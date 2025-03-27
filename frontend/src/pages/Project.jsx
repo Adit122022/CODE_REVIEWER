@@ -17,7 +17,7 @@ const Project = () => {
   };
 
   useEffect(() => {
-    const newSocket = io("https://fs73pflc-3000.inc1.devtunnels.ms/", { query:{ projectId } });
+    const newSocket = io("https:/localhost:3000", { query:{ projectId } });
     newSocket.on('message', msg => {
       console.log("Received message:", msg);
       sendMessage(msg);
