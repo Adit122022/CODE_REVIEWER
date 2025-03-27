@@ -18,7 +18,6 @@ const Project = () => {
 
   useEffect(() => {
     const newSocket = io("https://fs73pflc-3000.inc1.devtunnels.ms/", { query:{ projectId } });
-
     newSocket.on('message', msg => {
       console.log("Received message:", msg);
       sendMessage(msg);
@@ -27,11 +26,11 @@ const Project = () => {
   }, []);
 
   return (
-    <main className="flex justify-center items-center w-screen min-h-screen bg-gray-100 p-4">
-      <section className="w-full max-w-6xl bg-white shadow-xl rounded-xl p-6 flex flex-col md:flex-row gap-6">
+    <main className="flex justify-center items-center w-screen h-screen bg-gray-100 p-4">
+      <section className="w-full  bg-white shadow-xl h-full rounded-xl p-6 flex flex-col md:flex-row gap-6">
         
         {/* Chat Section */}
-        <div className="conversation flex-1 bg-blue-50 rounded-lg shadow-md flex flex-col justify-between">
+        <div className="conversation  flex-1 bg-blue-50 rounded-lg shadow-md flex flex-col justify-between">
           {/* Messages */}
           <div className="flex flex-col gap-2 overflow-y-auto max-h-[60vh] p-3">
             {messages.map((message, index) => (
@@ -49,14 +48,13 @@ const Project = () => {
           </div>
 
           {/* Message Input */}
-          <div className="flex items-center gap-2 border-t border-gray-300 p-2">
+          <div className="flex items-center w-full gap-2 border-t border-gray-300 p-2">
             <input
               type="text"
               value={msg}
               onChange={(e) => setmsg(e.target.value)}
-              className="flex-1 px-4 py-2 border rounded-md bg-white outline-none focus:border-blue-400"
+              className="w-[70%] px-4 py-2 border rounded-md bg-white outline-none focus:border-blue-400"
               placeholder="Type a message..."
-              onKeyDown={(e) => e.key === "Enter" && sendMessage(msg)}
             />
             <button
               onClick={() => {
@@ -64,7 +62,7 @@ const Project = () => {
                 sendMessage(msg);
                 setmsg("");
               }}
-              className="p-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+              className="px-3 py-2 bg-gray-500 rounded-full text-white hover:bg-gray-600 transition"
             >
               <i className="ri-send-plane-fill text-lg"></i>
             </button>

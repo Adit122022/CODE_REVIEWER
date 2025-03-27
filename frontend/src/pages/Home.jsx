@@ -39,7 +39,7 @@ const Home = () => {
   return (
     <section className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4">
     <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-8 border border-gray-200">
-     <div className=" flex w-full justify-between items-center py-5"> 
+     <div className="flex-row lg:flex-col flex w-full justify-between items-center py-5"> 
         {/* Header */}
       <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
         🚀 Your Projects
