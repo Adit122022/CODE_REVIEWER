@@ -1,0 +1,27 @@
+ Phase 1: Fix & Polish the VS Code-like Editor UI
+Make your code editor:
+
+Styled like VS Code (dark theme, line numbers, better font)
+
+Tailwind CSS powered
+
+Bug-free with Prism.js (no undefined.length error)
+
+🧠 Phase 2: Integrate AI Code Review Suggestions
+Add a backend route (Node.js + OpenAI API)
+
+On code change or button click, send code to backend
+
+Display the review/suggestions in the right-hand panel
+
+🔁 Phase 3: Live Room Sharing with Socket.io
+Ensure each room is isolated (projectId)
+
+Code updates broadcasted in real-time to everyone in that room
+
+Let’s Start with Phase 1: Fix the Editor
+Do you want me to:
+
+Write a clean CodeEditor.jsx from scratch with full Tailwind styling like VS Code, or
+
+Fix your existing one (with line numbers, highlighting, etc.)?
