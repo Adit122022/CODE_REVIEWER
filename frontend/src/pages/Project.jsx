@@ -23,15 +23,7 @@ const Project = () => {
   });
   const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    const newSocket = io("http://localhost:3000", { query: { projectId } });
-    newSocket.on("message", (msg) => {
-      setMessages(prev => [...prev, { sender: "ai", content: msg }]);
-    });
-    setSocket(newSocket);
-    return () => newSocket.disconnect();
-  }, [projectId]);
-
+ 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -122,24 +114,32 @@ const Project = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen">
+    <div className="relative w-screen h-screen overflow-x-hidden overflow-y-scroll">
       <Background />
       
-      <main className="relative z-10 w-full h-full p-6 flex flex-col">
+      <main className="relative z-10 w-full h-full p-4 md:p-6 flex flex-col">
         {/* Header */}
-        <header className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-white">
-            <Link to="/" className="text-white hover:text-blue-400">←</Link>
-            <span className="text-blue-400 ml-2">#{projectId.slice(0, 6)}</span>
-          </h1>
-          <div className="flex items-center space-x-4">
-            <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-white transition-all">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
+          <div className="flex items-center">
+            <Link to="/" className="text-white hover:text-blue-400 transition-colors p-1">
+              <i className="ri-arrow-left-line text-xl"></i>
+            </Link>
+            <h1 className="text-xl sm:text-2xl font-bold text-white ml-2">
+              <span className="text-blue-400">Project #{projectId.slice(0, 6)}</span>
+            </h1>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 sm:gap-4 w-full sm:w-auto">
+            <button 
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-white transition-all text-sm sm:text-base"
+              onClick={() => navigator.clipboard.writeText(window.location.href)}
+            >
               <i className="ri-share-line"></i>
               <span>Share</span>
             </button>
             <button 
               onClick={saveProject}
-              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white transition-all"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-white transition-all text-sm sm:text-base"
             >
               <i className="ri-save-line"></i>
               <span>Save</span>
@@ -148,30 +148,45 @@ const Project = () => {
         </header>
 
         {/* Main Content Area */}
-        <section className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 overflow-hidden">
           {/* Chat Section */}
-          <Conversation 
-            messages={messages} 
-            appendMessage={(msg) => setMessages(prev => [...prev, msg])}
-            socket={socket}
-          />
+          <div className="h-full">
+            <Conversation 
+              messages={messages} 
+              appendMessage={(msg) => setMessages(prev => [...prev, msg])}
+              socket={socket}
+            />
+          </div>
 
-          {/* Resizable Code and Review Sections */}
-          <div className="lg:col-span-2 flex flex-col gap-6">
+          {/* Code and Review Sections */}
+          <div className="lg:col-span-2 flex flex-col gap-4 sm:gap-6 h-full">
             {/* Code Editor Section */}
             <Resizable
               height={sizes.code}
               width={Infinity}
               onResize={(e, { size }) => onResize('code', size.height)}
               resizeHandles={['s']}
-              minConstraints={[Infinity, 200]}
+              minConstraints={[Infinity, 150]}
               maxConstraints={[Infinity, window.innerHeight * 0.7]}
             >
               <div 
-                className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 shadow-2xl overflow-hidden"
+                className="bg-gray-900/80 backdrop-blur-lg rounded-xl border border-gray-700 shadow-lg overflow-hidden flex flex-col h-full"
                 style={{ height: sizes.code }}
               >
-                <CodeEditor code={code} setCode={setCode} />
+                <div className="flex items-center justify-between px-4 py-2 bg-gray-800/50 border-b border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <i className="ri-file-code-line text-blue-400"></i>
+                    <span className="text-sm font-mono text-gray-300">editor.js</span>
+                  </div>
+                  <div className="flex gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <CodeEditor code={code} setCode={setCode} />
+                </div>
               </div>
             </Resizable>
 
@@ -181,48 +196,52 @@ const Project = () => {
               width={Infinity}
               onResize={(e, { size }) => onResize('review', size.height)}
               resizeHandles={['s']}
-              minConstraints={[Infinity, 150]}
+              minConstraints={[Infinity, 120]}
               maxConstraints={[Infinity, window.innerHeight * 0.5]}
             >
               <div 
-                className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 shadow-2xl overflow-hidden"
+                className="bg-gray-900/80 backdrop-blur-lg rounded-xl border border-gray-700 shadow-lg overflow-hidden flex flex-col h-full"
                 style={{ height: sizes.review }}
               >
-                <div className="px-6 h-full flex flex-col">
-                  <div className="flex items-center justify-between py-3">
-                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <i className="ri-feedback-line text-yellow-400"></i>
-                      AI Review
-                    </h2>
-                    <button 
-                      onClick={GenAiReview}
-                      disabled={isGeneratingReview}
-                      className={`text-xs px-3 py-1 rounded-full flex items-center gap-1 ${
-                        isGeneratingReview 
-                          ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
-                          : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'
-                      }`}
-                    >
-                      <i className="ri-ai-generate"></i>
-                      {isGeneratingReview ? 'Generating...' : 'Generate'}
-                    </button>
+                <div className="flex items-center justify-between px-4 py-2 bg-gray-800/50 border-b border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <i className="ri-feedback-line text-yellow-400"></i>
+                    <span className="text-sm font-medium text-white">Code Review</span>
                   </div>
-                  
-                  <div className="flex-1 overflow-y-auto">
-                    {review?.error ? (
-                      <div className="text-red-400 p-4">{review.error}</div>
-                    ) : review?.raw ? (
-                      <CodeReviewDisplay reviewData={{ success: true, data: review.raw }} />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                        <i className="ri-code-review-line text-4xl text-gray-500 mb-3"></i>
-                        <p className="text-gray-400">No review generated yet</p>
-                        <p className="text-gray-500 text-sm mt-1">
-                          Click "Generate Review" to analyze your code
-                        </p>
+                  <button 
+                    onClick={GenAiReview}
+                    disabled={isGeneratingReview}
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs ${
+                      isGeneratingReview 
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                        : 'bg-yellow-600/80 hover:bg-yellow-600 text-white'
+                    } transition-all`}
+                  >
+                    <i className={`ri-ai-generate ${isGeneratingReview ? 'animate-pulse' : ''}`}></i>
+                    {isGeneratingReview ? 'Generating...' : 'Generate Review'}
+                  </button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-3">
+                  {review?.error ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                      <i className="ri-error-warning-line text-red-400 text-3xl mb-3"></i>
+                      <p className="text-red-400 font-medium">{review.error}</p>
+                      <p className="text-gray-400 text-sm mt-1">Please try again</p>
+                    </div>
+                  ) : review?.raw ? (
+                    <CodeReviewDisplay reviewData={{ success: true, data: review.raw }} />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                      <div className="bg-gray-800/50 p-4 rounded-full mb-4">
+                        <i className="ri-code-review-line text-3xl text-gray-400"></i>
                       </div>
-                    )}
-                  </div>
+                      <h3 className="text-gray-300 font-medium mb-1">No Review Generated</h3>
+                      <p className="text-gray-500 text-sm max-w-xs">
+                        Click "Generate Review" to get AI feedback on your code
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </Resizable>
