@@ -1,12 +1,10 @@
-const {Router} = require('express');
-const { create, List, reviewCode } = require('../controller/project.controller');
+const express = require('express');
+const router = express.Router();
+const projectController = require('../controller/project.controller');
+const projectValidator = require('../validators/project.validator');
 
+router.post('/create', projectValidator.createProject, projectController.create);
+router.get('/list', projectController.list);
+router.post('/review', projectController.reviewCode);
 
-const routes = Router();
-
-
-routes.post('/create', create);
-routes.get('/list' ,List)
-routes.post('/review' , reviewCode);
-
-module.exports = routes
+module.exports = router;
