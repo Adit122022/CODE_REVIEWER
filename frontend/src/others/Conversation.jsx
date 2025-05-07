@@ -4,12 +4,10 @@ const Conversation = ({ messages, appendMessage }) => {
   const [msg, setMsg] = useState("");
   const messagesEndRef = useRef(null);
 
-  // Auto-scroll to the latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Function to send message
   const sendMessage = () => {
     if (msg.trim()) {
       appendMessage({ sender: "user", content: msg });
@@ -18,43 +16,44 @@ const Conversation = ({ messages, appendMessage }) => {
   };
 
   return (
-    <div className="conversation flex flex-col h-screen max-w-2xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-      
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+    <div className="flex flex-col h-screen max-w-2xl mx-auto bg-base-100 shadow-xl rounded-xl overflow-hidden border border-base-300">
+
+      {/* Chat Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`max-w-[80%] px-4 py-2 rounded-lg text-sm ${
-              message.sender === "user"
-                ? "bg-blue-500 text-white self-end"
-                : "bg-gray-200 text-black self-start"
-            }`}
+            className={`chat ${message.sender === "user" ? "chat-end" : "chat-start"}`}
           >
-            <p>{message.content}</p>
+            <div
+              className={`chat-bubble text-sm ${
+                message.sender === "user" ? "bg-primary text-white" : "bg-base-200 text-black"
+              }`}
+            >
+              {message.content}
+            </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input - Stays at Bottom */}
-      <div className="sticky bottom-0 bg-gray-100 p-2 border-t flex items-center w-full">
+      {/* Chat Input */}
+      <div className="p-4 bg-base-200 border-t flex items-center gap-2">
         <input
           type="text"
           value={msg}
           onChange={(e) => setMsg(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()} // Press Enter to Send
-          className="flex-1 p-3 rounded-full outline-none bg-white border border-gray-300"
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           placeholder="Type a message..."
+          className="input input-bordered input-md w-full"
         />
         <button
           onClick={sendMessage}
-          className="ml-2 p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition"
+          className="btn btn-primary rounded-full min-w-fit px-4"
         >
-          <i className="ri-send-plane-fill text-xl"></i>
+          <i className="ri-send-plane-fill text-lg" />
         </button>
       </div>
-
     </div>
   );
 };

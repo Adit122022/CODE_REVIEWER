@@ -51,6 +51,11 @@ const Project = () => {
           <div className="flex items-center w-full gap-2 border-t border-gray-300 p-2">
             <input
               type="text"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  sendMessage(msg);
+                }
+              }}
               value={msg}
               onChange={(e) => setmsg(e.target.value)}
               className="w-[70%] px-4 py-2 border rounded-md bg-white outline-none focus:border-blue-400"
