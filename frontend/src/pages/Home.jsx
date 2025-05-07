@@ -18,7 +18,8 @@ const Home = () => {
   const fetchProjects = async () => {
     try {
       const response = await axios.get("http://localhost:3000/v1/api/project/list");
-      setProjects(response.data);
+      setProjects(response.data.data);
+       console.log(response.data);
     } catch (error) {
       console.error("Error fetching projects:", error);
     }
@@ -94,6 +95,7 @@ const Home = () => {
 
                 {/* Projects Grid */}
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {console.log("Projects--> ", projects)}
                   {projects.length > 0 ? (
                     projects.map((project) => (
                       <Link to={`/project/${project._id}`} key={project._id}>

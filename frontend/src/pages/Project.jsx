@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import { Resizable } from "react-resizable";
 import "react-resizable/css/styles.css";
@@ -12,23 +12,15 @@ const Project = () => {
   const { projectId } = useParams();
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [msg, setMsg] = useState("");
   const [code, setCode] = useState("");
+  const [review, setReview] = useState(null);
+  const [isGeneratingReview, setIsGeneratingReview] = useState(false);
   const [sizes, setSizes] = useState({
     chat: 1,
     code: 400,
     review: 200
   });
   const messagesEndRef = useRef(null);
-
-  const sendMessage = () => {
-    if (msg.trim()) {
-      const newMessage = { sender: "user", content: msg };
-      setMessages(prev => [...prev, newMessage]);
-      socket?.emit("message", msg);
-      setMsg("");
-    }
-  };
 
   useEffect(() => {
     const newSocket = io("http://localhost:3000", { query: { projectId } });
@@ -50,6 +42,87 @@ const Project = () => {
     }));
   };
 
+  const GenAiReview = async () => {
+    if (!code.trim()) {
+      setReview({
+        error: "Please write some code first before generating a review"
+      });
+      return;
+    }
+
+    setIsGeneratingReview(true);
+    try {
+      const response = await fetch('http://localhost:3000/v1/api/project/review', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.text();
+      setReview({
+        quality: extractRating(data, "Code Quality"),
+        performance: extractSection(data, "Performance Suggestions"),
+        issues: extractSection(data, "Potential Issues"),
+        documentation: extractSection(data, "Documentation Suggestions"),
+        raw: data
+      });
+    } catch (error) {
+      console.error('Error generating review:', error);
+      setReview({
+        error: "Failed to generate review. Please try again."
+      });
+    } finally {
+      setIsGeneratingReview(false);
+    }
+  };
+
+  // Helper functions to parse AI response
+  const extractRating = (text, section) => {
+    const regex = new RegExp(`${section}:\s*([0-9.]+)`);
+    const match = text.match(regex);
+    return match ? match[1] : "N/A";
+  };
+
+  const extractSection = (text, section) => {
+    const regex = new RegExp(`${section}:(.*?)(?=\\n\\d+\\.|\\n\\w+:|$)`, 's');
+    const match = text.match(regex);
+    return match ? match[1].trim() : "No suggestions provided";
+  };
+
+  const saveProject = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/project/${projectId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save project');
+      }
+
+      // Show success feedback
+      setMessages(prev => [...prev, {
+        sender: "ai",
+        content: "Project saved successfully!"
+      }]);
+    } catch (error) {
+      console.error('Error saving project:', error);
+      setMessages(prev => [...prev, {
+        sender: "ai",
+        content: "Failed to save project. Please try again."
+      }]);
+    }
+  };
+
   return (
     <div className="relative w-screen h-screen">
       <Background />
@@ -58,14 +131,18 @@ const Project = () => {
         {/* Header */}
         <header className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-white">
-            Project <span className="text-blue-400">#{projectId.slice(0, 6)}</span>
+            <Link to="/" className="text-white hover:text-blue-400">←</Link>
+            <span className="text-blue-400 ml-2">#{projectId.slice(0, 6)}</span>
           </h1>
           <div className="flex items-center space-x-4">
             <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-white transition-all">
               <i className="ri-share-line"></i>
               <span>Share</span>
             </button>
-            <button className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white transition-all">
+            <button 
+              onClick={saveProject}
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white transition-all"
+            >
               <i className="ri-save-line"></i>
               <span>Save</span>
             </button>
@@ -74,16 +151,16 @@ const Project = () => {
 
         {/* Main Content Area */}
         <section className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Chat Section - Fixed Width */}
+          {/* Chat Section */}
           <Conversation 
-  messages={messages} 
-  appendMessage={(msg) => setMessages(prev => [...prev, msg])}
-  socket={socket}
-/>
+            messages={messages} 
+            appendMessage={(msg) => setMessages(prev => [...prev, msg])}
+            socket={socket}
+          />
 
           {/* Resizable Code and Review Sections */}
           <div className="lg:col-span-2 flex flex-col gap-6">
-            {/* Code Editor Section - Resizable */}
+            {/* Code Editor Section */}
             <Resizable
               height={sizes.code}
               width={Infinity}
@@ -100,7 +177,7 @@ const Project = () => {
               </div>
             </Resizable>
 
-            {/* Review Section - Resizable */}
+            {/* Review Section */}
             <Resizable
               height={sizes.review}
               width={Infinity}
@@ -113,25 +190,47 @@ const Project = () => {
                 className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 shadow-2xl overflow-hidden"
                 style={{ height: sizes.review }}
               >
-                <div className="p-6 h-full flex flex-col">
+                <div className="px-6 py-2 h-full flex flex-col">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                       <i className="ri-feedback-line text-yellow-400"></i>
                       AI Review
                     </h2>
-                    <button className="text-xs bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full flex items-center gap-1">
+                    <button 
+                      onClick={GenAiReview}
+                      disabled={isGeneratingReview}
+                      className={`text-xs px-3 py-1 rounded-full flex items-center gap-1 ${
+                        isGeneratingReview 
+                          ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
+                          : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'
+                      }`}
+                    >
                       <i className="ri-ai-generate"></i>
-                      Generate
+                      {isGeneratingReview ? 'Generating...' : 'Generate'}
                     </button>
                   </div>
                   
                   <div className="bg-gray-900/50 rounded-lg p-4 flex-1 scrollbar overflow-y-auto">
-                    <div className="text-gray-300 text-sm space-y-3">
-                      <p>✨ <span className="text-yellow-400">Code Quality:</span> 8.5/10</p>
-                      <p>⚡ <span className="text-blue-400">Performance Suggestions:</span> Consider memoizing component</p>
-                      <p>🔍 <span className="text-purple-400">Potential Issues:</span> Line 42 - Unused variable</p>
-                      <p>📝 <span className="text-green-400">Documentation:</span> Add JSDoc comments for functions</p>
-                    </div>
+                    {review?.error ? (
+                      <p className="text-red-400">{review.error}</p>
+                    ) : review ? (
+                      <div className="text-gray-300 text-sm space-y-3">
+                        <p>✨ <span className="text-yellow-400">Code Quality:</span> {review.quality}</p>
+                        <p>⚡ <span className="text-blue-400">Performance Suggestions:</span> {review.performance}</p>
+                        <p>🔍 <span className="text-purple-400">Potential Issues:</span> {review.issues}</p>
+                        <p>📝 <span className="text-green-400">Documentation:</span> {review.documentation}</p>
+                        {review.raw && (
+                          <details className="mt-4">
+                            <summary className="text-gray-400 cursor-pointer">Full Review</summary>
+                            <pre className="mt-2 p-2 bg-gray-800/50 rounded text-xs whitespace-pre-wrap">{review.raw}</pre>
+                          </details>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-400">Generate an AI review of your code</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

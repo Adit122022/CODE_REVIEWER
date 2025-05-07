@@ -69,41 +69,52 @@ module.exports = {
    * Review code using Gemini AI
    */
   reviewCode: async (req, res) => {
-    try {
-      const { code } = req.body;
-      
-      if (!code || !code.trim()) {
-        return res.status(400).json({
-          success: false,
-          message: "Code content is required"
-        });
-      }
-
-      const result = await model.generateContent(`
-        Please review the following code:
-        \n\n${code}\n\n
-        Provide feedback in this format:
-        1. Code Quality (1-10)
-        2. Performance Suggestions
-        3. Potential Issues
-        4. Best Practices Recommendations
-        5. Documentation Suggestions
-      `);
-
-      const response = await result.response.text();
-      
-      return res.json({
-        success: true,
-        data: response
-      });
-
-    } catch (error) {
-      console.error('Error reviewing code:', error);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to generate code review",
-        error: error.message
-      });
-    }
-  }
+   try {
+     console.log('Request body:', req.body); // Debug logging
+     
+     const { code } = req.body;
+     
+     if (!code || typeof code !== 'string') {
+       return res.status(400).json({
+         success: false,
+         message: "Valid code content is required as a string"
+       });
+     }
+ 
+     // Trim and check if code is empty after trimming
+     const trimmedCode = code.trim();
+     if (!trimmedCode) {
+       return res.status(400).json({
+         success: false,
+         message: "Code content cannot be empty"
+       });
+     }
+ 
+     const result = await model.generateContent(`
+       Please review the following code:
+       \n\n${trimmedCode}\n\n
+       Provide feedback in this format:
+       1. Code Quality (1-10)
+       2. Performance Suggestions
+       3. Potential Issues
+       4. Best Practices Recommendations
+       5. Documentation Suggestions
+     `);
+ 
+     const response = await result.response.text();
+     
+     return res.json({
+       success: true,
+       data: response
+     });
+ 
+   } catch (error) {
+     console.error('Error reviewing code:', error);
+     return res.status(500).json({
+       success: false,
+       message: "Failed to generate code review",
+       error: error.message
+     });
+   }
+ }
 };
