@@ -1,16 +1,22 @@
 import React from 'react';
-import Editor from 'react-simple-code-editor';
-import Prism from 'prismjs';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/themes/prism-tomorrow.css';
+import Editor from '@monaco-editor/react';
 
 const CodeEditor = ({ code, setCode }) => {
-  const highlight = (code) => {
-    if (!Prism.languages.javascript) {
-      console.warn('PrismJS JavaScript language definition not loaded');
-      return code;
-    }
-    return Prism.highlight(code, Prism.languages.javascript, 'javascript');
+  // Handle editor mount to configure Monaco (optional)
+  const handleEditorDidMount = (editor, monaco) => {
+    // Enable JavaScript IntelliSense
+    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: false,
+      noSyntaxValidation: false,
+    });
+    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.ESNext,
+      allowNonTsExtensions: true,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.ESNext,
+      noEmit: true,
+      allowJs: true,
+    });
   };
 
   return (
@@ -28,13 +34,27 @@ const CodeEditor = ({ code, setCode }) => {
       {/* Editor Area */}
       <div className="flex-1 overflow-auto text-sm leading-relaxed">
         <Editor
+          height="100%"
+          defaultLanguage="javascript"
           value={code}
-          onValueChange={setCode}
-          highlight={highlight}
-          padding={16}
-          className="outline-none min-h-full whitespace-pre"
-          style={{
+          onChange={setCode}
+          theme="vs-dark"
+          onMount={handleEditorDidMount}
+          options={{
             fontFamily: '"Fira Code", monospace',
+            fontSize: 14,
+            padding: { top: 16, bottom: 16 },
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            suggest: {
+              showSnippets: true,
+              showWords: true,
+              showKeywords: true,
+            },
+            inlineSuggest: { enabled: true },
+            formatOnType: true,
+            autoClosingBrackets: true,
           }}
         />
       </div>
