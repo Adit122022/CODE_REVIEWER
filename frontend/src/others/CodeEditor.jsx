@@ -93,7 +93,7 @@ const CodeEditor = ({ code, setCode }) => {
   };
 
   return (
-    <div className="w-full h-full rounded-xl flex flex-col bg-[#1e1e1e] text-white font-mono overflow-hidden">
+    <div className="w-full h-screen rounded-xl flex flex-col bg-[#1e1e1e] text-white font-mono overflow-hidden">
       <div className="bg-[#2d2d2d] px-4 py-2 flex justify-between items-center border-b border-[#444]">
         <span className="text-sm font-semibold text-gray-200">index.js</span>
         <div className="flex gap-2">

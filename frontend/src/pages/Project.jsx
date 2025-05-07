@@ -8,6 +8,7 @@ import CodeEditor from "../others/CodeEditor";
 import Background from "../Background/Background";
 import Conversation from "../others/Conversation";
 import CodeReviewDisplay from "../others/CodeReviewDisplay";
+import axiosInstance from "../../axios/axios";
 
 const Project = () => {
   const { projectId } = useParams();
@@ -16,14 +17,24 @@ const Project = () => {
   const [code, setCode] = useState("");
   const [review, setReview] = useState(null);
   const [isGeneratingReview, setIsGeneratingReview] = useState(false);
+  const [showReviewPanel, setShowReviewPanel] = useState(false);
+  const [activeReviewTab, setActiveReviewTab] = useState("quality");
   const [sizes, setSizes] = useState({
     chat: 1,
-    code: 400,
-    review: 200
+    code: 600,
+    review: 300
   });
   const messagesEndRef = useRef(null);
 
- 
+  useEffect(() => {
+    const newSocket = io(import.meta.env.VITE_API_SOCKET_IO, { query: { projectId } });
+    newSocket.on("message", (msg) => {
+      setMessages(prev => [...prev, { sender: "ai", content: msg }]);
+    });
+    setSocket(newSocket);
+    return () => newSocket.disconnect();
+  }, [projectId]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -45,23 +56,12 @@ const Project = () => {
 
     setIsGeneratingReview(true);
     try {
-      const response = await fetch('http://localhost:3000/v1/api/project/review', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ code })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json(); // Changed to json() since your API returns JSON
+      const response = await axiosInstance.post('project/review', { code });
       setReview({
-        ...data, // Spread the entire response data
-        raw: data.data // Store the raw text in the raw property
+        ...response.data,
+        raw: response.data.data
       });
+      setShowReviewPanel(true);
     } catch (error) {
       console.error('Error generating review:', error);
       setReview({
@@ -72,34 +72,9 @@ const Project = () => {
     }
   };
 
-  // Helper functions to parse AI response
-  const extractRating = (text, section) => {
-    const regex = new RegExp(`${section}:\s*([0-9.]+)`);
-    const match = text.match(regex);
-    return match ? match[1] : "N/A";
-  };
-
-  const extractSection = (text, section) => {
-    const regex = new RegExp(`${section}:(.*?)(?=\\n\\d+\\.|\\n\\w+:|$)`, 's');
-    const match = text.match(regex);
-    return match ? match[1].trim() : "No suggestions provided";
-  };
-
   const saveProject = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/project/${projectId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ code })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save project');
-      }
-
-      // Show success feedback
+      const response = await axiosInstance.put(`project/${projectId}`, { code });
       setMessages(prev => [...prev, {
         sender: "ai",
         content: "Project saved successfully!"
@@ -114,32 +89,41 @@ const Project = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-x-hidden overflow-y-scroll">
+    <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
       <Background />
       
-      <main className="relative z-10 w-full h-full p-4 md:p-6 flex flex-col">
+      <main className="relative z-10 w-full h-full p-2 sm:p-4 md:p-6 flex flex-col">
         {/* Header */}
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 mb-3 sm:mb-6">
           <div className="flex items-center">
-            <Link to="/" className="text-white hover:text-blue-400 transition-colors p-1">
+            <Link 
+              to="/" 
+              className="text-white hover:text-blue-400 transition-colors p-1 rounded-full hover:bg-gray-800/50"
+              aria-label="Back to home"
+            >
               <i className="ri-arrow-left-line text-xl"></i>
             </Link>
-            <h1 className="text-xl sm:text-2xl font-bold text-white ml-2">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white ml-2">
               <span className="text-blue-400">Project #{projectId.slice(0, 6)}</span>
             </h1>
           </div>
           
-          <div className="flex flex-wrap gap-2 sm:gap-4 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button 
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-white transition-all text-sm sm:text-base"
-              onClick={() => navigator.clipboard.writeText(window.location.href)}
+              className="flex items-center gap-1 sm:gap-2 bg-white/10 hover:bg-white/20 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-white transition-all text-xs sm:text-sm"
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                setMessages(prev => [...prev, { sender: "system", content: "Link copied to clipboard!" }]);
+              }}
+              aria-label="Share project"
             >
               <i className="ri-share-line"></i>
               <span>Share</span>
             </button>
             <button 
               onClick={saveProject}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-white transition-all text-sm sm:text-base"
+              className="flex items-center gap-1 sm:gap-2 bg-blue-600 hover:bg-blue-700 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-white transition-all text-xs sm:text-sm"
+              aria-label="Save project"
             >
               <i className="ri-save-line"></i>
               <span>Save</span>
@@ -148,7 +132,7 @@ const Project = () => {
         </header>
 
         {/* Main Content Area */}
-        <section className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 overflow-hidden">
+        <section className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 overflow-hidden">
           {/* Chat Section */}
           <div className="h-full">
             <Conversation 
@@ -159,7 +143,25 @@ const Project = () => {
           </div>
 
           {/* Code and Review Sections */}
-          <div className="lg:col-span-2 flex flex-col gap-4 sm:gap-6 h-full">
+          <div className="lg:col-span-2 flex flex-col gap-3 sm:gap-4 md:gap-6 h-full relative">
+            {/* Floating Generate Button */}
+            <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-10">
+              <button 
+                onClick={GenAiReview}
+                disabled={isGeneratingReview}
+                className={`flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm ${
+                  isGeneratingReview 
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-yellow-600/80 hover:bg-yellow-600 text-white shadow-md'
+                } transition-all`}
+                aria-label="Generate code review"
+              >
+                <i className={`ri-ai-generate ${isGeneratingReview ? 'animate-pulse' : ''}`}></i>
+                <span className="hidden sm:inline">{isGeneratingReview ? 'Generating...' : 'Generate Review'}</span>
+                <span className="sm:hidden">{isGeneratingReview ? '...' : 'Review'}</span>
+              </button>
+            </div>
+
             {/* Code Editor Section */}
             <Resizable
               height={sizes.code}
@@ -170,18 +172,18 @@ const Project = () => {
               maxConstraints={[Infinity, window.innerHeight * 0.7]}
             >
               <div 
-                className="bg-gray-900/80 backdrop-blur-lg rounded-xl border border-gray-700 shadow-lg overflow-hidden flex flex-col h-full"
+                className="bg-gray-800/90 backdrop-blur-sm rounded-lg sm:rounded-xl border border-gray-700 shadow-lg overflow-hidden flex flex-col h-full"
                 style={{ height: sizes.code }}
               >
-                <div className="flex items-center justify-between px-4 py-2 bg-gray-800/50 border-b border-gray-700">
-                  <div className="flex items-center gap-2">
-                    <i className="ri-file-code-line text-blue-400"></i>
-                    <span className="text-sm font-mono text-gray-300">editor.js</span>
+                <div className="flex items-center justify-between px-3 sm:px-4 py-1 sm:py-2 bg-gray-700/50 border-b border-gray-600">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <i className="ri-file-code-line text-blue-400 text-sm sm:text-base"></i>
+                    <span className="text-xs sm:text-sm font-mono text-gray-300">editor.js</span>
                   </div>
                   <div className="flex gap-1">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
-                    <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                    <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-500"></span>
+                    <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-yellow-400"></span>
+                    <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-green-500"></span>
                   </div>
                 </div>
                 <div className="flex-1">
@@ -190,61 +192,100 @@ const Project = () => {
               </div>
             </Resizable>
 
-            {/* Review Section */}
-            <Resizable
-              height={sizes.review}
-              width={Infinity}
-              onResize={(e, { size }) => onResize('review', size.height)}
-              resizeHandles={['s']}
-              minConstraints={[Infinity, 120]}
-              maxConstraints={[Infinity, window.innerHeight * 0.5]}
-            >
-              <div 
-                className="bg-gray-900/80 backdrop-blur-lg rounded-xl border border-gray-700 shadow-lg overflow-hidden flex flex-col h-full"
-                style={{ height: sizes.review }}
-              >
-                <div className="flex items-center justify-between px-4 py-2 bg-gray-800/50 border-b border-gray-700">
+            {/* Review Panel - Slides in from right */}
+            <div className={`absolute top-0 right-0 h-full w-full lg:w-1/2 xl:w-2/5 bg-gray-800/95 backdrop-blur-md border-l border-gray-600 shadow-xl transition-all duration-300 ease-in-out transform ${
+              showReviewPanel ? 'translate-x-0' : 'translate-x-full'
+            }`}>
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-gray-700/50 border-b border-gray-600">
                   <div className="flex items-center gap-2">
                     <i className="ri-feedback-line text-yellow-400"></i>
                     <span className="text-sm font-medium text-white">Code Review</span>
                   </div>
                   <button 
-                    onClick={GenAiReview}
-                    disabled={isGeneratingReview}
-                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs ${
-                      isGeneratingReview 
-                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                        : 'bg-yellow-600/80 hover:bg-yellow-600 text-white'
-                    } transition-all`}
+                    onClick={() => setShowReviewPanel(false)}
+                    className="text-gray-400 hover:text-white p-1"
+                    aria-label="Close review panel"
                   >
-                    <i className={`ri-ai-generate ${isGeneratingReview ? 'animate-pulse' : ''}`}></i>
-                    {isGeneratingReview ? 'Generating...' : 'Generate Review'}
+                    <i className="ri-close-line"></i>
                   </button>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto p-3">
+                <div className="flex-1 overflow-y-auto">
                   {review?.error ? (
                     <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                      <i className="ri-error-warning-line text-red-400 text-3xl mb-3"></i>
-                      <p className="text-red-400 font-medium">{review.error}</p>
-                      <p className="text-gray-400 text-sm mt-1">Please try again</p>
+                      <i className="ri-error-warning-line text-red-400 text-2xl sm:text-3xl mb-2 sm:mb-3"></i>
+                      <p className="text-red-400 font-medium text-sm sm:text-base">{review.error}</p>
+                      <p className="text-gray-400 text-xs sm:text-sm mt-1">Please try again</p>
                     </div>
                   ) : review?.raw ? (
-                    <CodeReviewDisplay reviewData={{ success: true, data: review.raw }} />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                      <div className="bg-gray-800/50 p-4 rounded-full mb-4">
-                        <i className="ri-code-review-line text-3xl text-gray-400"></i>
+                    <div className="h-full flex flex-col">
+                      {/* Review Tabs - Mobile optimized */}
+                      <div className="flex border-b border-gray-700 bg-gray-700/30 overflow-x-auto">
+                        <button
+                          onClick={() => setActiveReviewTab("quality")}
+                          className={`px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] xs:text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                            activeReviewTab === "quality" 
+                              ? 'text-yellow-400 border-b-2 border-yellow-400' 
+                              : 'text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          Code Quality
+                        </button>
+                        <button
+                          onClick={() => setActiveReviewTab("performance")}
+                          className={`px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] xs:text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                            activeReviewTab === "performance" 
+                              ? 'text-blue-400 border-b-2 border-blue-400' 
+                              : 'text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          Performance
+                        </button>
+                        <button
+                          onClick={() => setActiveReviewTab("issues")}
+                          className={`px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] xs:text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                            activeReviewTab === "issues" 
+                              ? 'text-red-400 border-b-2 border-red-400' 
+                              : 'text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          Issues
+                        </button>
+                        <button
+                          onClick={() => setActiveReviewTab("suggestions")}
+                          className={`px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] xs:text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                            activeReviewTab === "suggestions" 
+                              ? 'text-green-400 border-b-2 border-green-400' 
+                              : 'text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          Suggestions
+                        </button>
                       </div>
-                      <h3 className="text-gray-300 font-medium mb-1">No Review Generated</h3>
-                      <p className="text-gray-500 text-sm max-w-xs">
-                        Click "Generate Review" to get AI feedback on your code
+                      
+                      {/* Tab Content */}
+                      <div className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4">
+                        <CodeReviewDisplay 
+                          reviewData={{ success: true, data: review.raw }} 
+                          activeTab={activeReviewTab}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-4 sm:p-6">
+                      <div className="bg-gray-700/50 p-3 sm:p-4 rounded-full mb-3 sm:mb-4">
+                        <i className="ri-code-review-line text-2xl sm:text-3xl text-gray-400"></i>
+                      </div>
+                      <h3 className="text-gray-300 font-medium text-sm sm:text-base mb-1">Review Panel</h3>
+                      <p className="text-gray-500 text-xs sm:text-sm max-w-xs">
+                        Your code review will appear here after generation
                       </p>
                     </div>
                   )}
                 </div>
               </div>
-            </Resizable>
+            </div>
           </div>
         </section>
       </main>
