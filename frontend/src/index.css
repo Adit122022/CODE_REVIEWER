@@ -6,6 +6,9 @@
     white-space: pre;
   }
   
+  .scrollbar::-webkit-scrollbar{
+  display: none;
+  }
   .editor-container > div > code > span {
     display: block;
     padding-left: 2.5rem;
