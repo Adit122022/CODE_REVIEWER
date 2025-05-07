@@ -8,7 +8,7 @@ const CodeEditor = ({ code, setCode }) => {
   const editorRef = useRef(null);
   const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash",
+    model: "gemini-1.5-flash",  // Recommended for code completion
     generationConfig: {
       maxOutputTokens: 100,
     }
@@ -22,13 +22,13 @@ const CodeEditor = ({ code, setCode }) => {
     if (!editorRef.current || !monacoRef.current) return { suggestions: [] };
 
     const editor = editorRef.current;
-    const model = editor.getModel();
+    const editorModel  = editor.getModel();
     const position = editor.getPosition();
     
-    if (!model || !position) return { suggestions: [] };
+    if (!editorModel  || !position) return { suggestions: [] };
 
-    const currentCode = model.getValue();
-    const cursorOffset = model.getOffsetAt(position);
+    const currentCode = editorModel.getValue();
+    const cursorOffset = editorModel.getOffsetAt(position);
     const prefix = currentCode.substring(0, cursorOffset);
     
     if (suggestionCache.has(prefix)) {
@@ -103,7 +103,7 @@ const CodeEditor = ({ code, setCode }) => {
         </div>
       </div>
       
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto mt-2">
         <Editor
           height="100%"
           defaultLanguage="javascript"

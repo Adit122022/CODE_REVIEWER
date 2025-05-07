@@ -7,6 +7,7 @@ import "remixicon/fonts/remixicon.css";
 import CodeEditor from "../others/CodeEditor";
 import Background from "../Background/Background";
 import Conversation from "../others/Conversation";
+import CodeReviewDisplay from "../others/CodeReviewDisplay";
 
 const Project = () => {
   const { projectId } = useParams();
@@ -64,13 +65,10 @@ const Project = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.text();
+      const data = await response.json(); // Changed to json() since your API returns JSON
       setReview({
-        quality: extractRating(data, "Code Quality"),
-        performance: extractSection(data, "Performance Suggestions"),
-        issues: extractSection(data, "Potential Issues"),
-        documentation: extractSection(data, "Documentation Suggestions"),
-        raw: data
+        ...data, // Spread the entire response data
+        raw: data.data // Store the raw text in the raw property
       });
     } catch (error) {
       console.error('Error generating review:', error);
@@ -190,8 +188,8 @@ const Project = () => {
                 className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 shadow-2xl overflow-hidden"
                 style={{ height: sizes.review }}
               >
-                <div className="px-6 py-2 h-full flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="px-6 h-full flex flex-col">
+                  <div className="flex items-center justify-between py-3">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                       <i className="ri-feedback-line text-yellow-400"></i>
                       AI Review
@@ -210,25 +208,18 @@ const Project = () => {
                     </button>
                   </div>
                   
-                  <div className="bg-gray-900/50 rounded-lg p-4 flex-1 scrollbar overflow-y-auto">
+                  <div className="flex-1 overflow-y-auto">
                     {review?.error ? (
-                      <p className="text-red-400">{review.error}</p>
-                    ) : review ? (
-                      <div className="text-gray-300 text-sm space-y-3">
-                        <p>✨ <span className="text-yellow-400">Code Quality:</span> {review.quality}</p>
-                        <p>⚡ <span className="text-blue-400">Performance Suggestions:</span> {review.performance}</p>
-                        <p>🔍 <span className="text-purple-400">Potential Issues:</span> {review.issues}</p>
-                        <p>📝 <span className="text-green-400">Documentation:</span> {review.documentation}</p>
-                        {review.raw && (
-                          <details className="mt-4">
-                            <summary className="text-gray-400 cursor-pointer">Full Review</summary>
-                            <pre className="mt-2 p-2 bg-gray-800/50 rounded text-xs whitespace-pre-wrap">{review.raw}</pre>
-                          </details>
-                        )}
-                      </div>
+                      <div className="text-red-400 p-4">{review.error}</div>
+                    ) : review?.raw ? (
+                      <CodeReviewDisplay reviewData={{ success: true, data: review.raw }} />
                     ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <p className="text-gray-400">Generate an AI review of your code</p>
+                      <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                        <i className="ri-code-review-line text-4xl text-gray-500 mb-3"></i>
+                        <p className="text-gray-400">No review generated yet</p>
+                        <p className="text-gray-500 text-sm mt-1">
+                          Click "Generate Review" to analyze your code
+                        </p>
                       </div>
                     )}
                   </div>
