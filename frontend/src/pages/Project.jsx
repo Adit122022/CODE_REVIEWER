@@ -178,7 +178,7 @@ const Project = () => {
                 <div className="flex items-center justify-between px-3 sm:px-4 py-1 sm:py-2 bg-gray-700/50 border-b border-gray-600">
                   <div className="flex items-center gap-1 sm:gap-2">
                     <i className="ri-file-code-line text-blue-400 text-sm sm:text-base"></i>
-                    <span className="text-xs sm:text-sm font-mono text-gray-300">editor.js</span>
+                    <span onClick={setShowReviewPanel(false)} className="text-xs sm:text-sm font-mono text-gray-300">editor.js</span>
                   </div>
                   <div className="flex gap-1">
                     <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-500"></span>
